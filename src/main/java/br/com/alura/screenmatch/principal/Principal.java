@@ -4,10 +4,7 @@ import br.com.alura.screenmatch.model.*;
 import br.com.alura.screenmatch.repository.SerieRepository;
 import br.com.alura.screenmatch.service.ConsumoApi;
 import br.com.alura.screenmatch.service.ConverteDados;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,11 +28,17 @@ public class Principal {
     public void exibeMenu() {
 
         var menu = """
+                
                 */*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*
                 
                     1 - Buscar séries
                     2 - Buscar episódios
                     3 - Listar séries buscadas
+                    4 - Buscar série por título
+                    5 - Buscar séries por ator
+                    6 - Buscar séries por categoria
+                    7 - Top 5 Séries
+                    8 - Buscar por numero de Temporadas/Avaliação
                     
                     0 - Sair                                 
                 """;
@@ -56,6 +59,21 @@ public class Principal {
                     break;
                 case 3:
                     listarSeriesBuscadas();
+                    break;
+                case 4:
+                    buscarSeriePorTitulo();
+                    break;
+                case 5:
+                    buscarSeriesPorAtor();
+                    break;
+                case 6:
+                    buscarSeriesPorCategoria();
+                    break;
+                case 7:
+                    buscaTop5Series();
+                    break;
+                case 8:
+                    buscarPorNumeroDeTemporadas();
                     break;
                 case 0:
                     System.out.println("Saindo...");
@@ -120,5 +138,54 @@ public class Principal {
                 .forEach(System.out::println);
 
     }
+
+    private void buscarSeriePorTitulo() {
+        System.out.println("Escolha uma serie pelo nome: ");
+        var nomeSerie = leitura.nextLine();
+        Optional<Serie> serieBuscada = repositorio.findByTituloContainingIgnoreCase(nomeSerie);
+
+        if ( serieBuscada.isPresent()){
+            System.out.println("Dados da serie: " + serieBuscada);
+        } else System.out.println("Serie não encontrada");
+
+    }
+
+    private void buscarSeriesPorAtor() {
+        System.out.println("Qual o nome do ator para a busca?");
+        var nomeAtor = leitura.nextLine();
+        System.out.println("Qual a nota minima da serie para a busca?");
+        var nota = leitura.nextDouble();
+        List<Serie> atorBuscado = repositorio.findByAtoresContainingIgnoreCaseAndAvaliacaoGreaterThanEqual(nomeAtor, nota);
+        System.out.println("Series em que " + nomeAtor + " trabalhou: ");
+        atorBuscado.forEach(s-> System.out.println(s.getTitulo() + ", com uma avaliação de " + s.getAvaliacao() + "!"));
+    }
+
+    private void buscaTop5Series() {
+        System.out.println("As top 5 series do banco são :");
+        List<Serie> top5 = repositorio.findTop5ByOrderByAvaliacaoDesc();
+        top5.forEach(t -> System.out.println(t.getTitulo() + ", com uma avalição de " + t.getAvaliacao() + "!"));
+    }
+
+    private void buscarSeriesPorCategoria() {
+        System.out.println("Deseja buscar séries de que categoria/gênero? ");
+        var nomeGenero = leitura.nextLine();
+        Categoria categoria = Categoria.fromPortugues(nomeGenero);
+        List<Serie> seriesPorCategoria = repositorio.findByGenero(categoria);
+        System.out.println("Séries da categoria " + nomeGenero + ".");
+        seriesPorCategoria.forEach(System.out::println);
+    }
+
+    private void buscarPorNumeroDeTemporadas() {
+        System.out.println("Você quer ver séries com até quantas temporadas?");
+        var temporadas = leitura.nextInt();
+        List<Serie> serieList = repositorio.findByTotalTemporadasLessThanEqualAndAvaliacaoGreaterThanEqual(
+                temporadas, 8.5);
+        serieList.forEach(t -> System.out.println(t.getTitulo() + ", tem um total de " + t.getTotalTemporadas() +
+                " temporadas e uma nota de " + t.getAvaliacao() + "!"));
+
+    }
+
+
 }
+
 
